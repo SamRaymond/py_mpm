@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def shape_function(particle_pos, node_pos, cell_size):
     """
@@ -73,4 +74,34 @@ def gradient_shape_function(particle_pos, node_pos, cell_size):
     dsy_dy = piecewise_gradient(particle_pos[1], node_pos[1])
 
     return dsx_dx, dsy_dy
+# wrap in main
+if __name__ == "__main__":  
+    # Parameters
+    cell_size = 1.0
+    node_pos = np.array([0.0, 0.0])
+    particle_positions = np.linspace(-1.5 * cell_size, 1.5 * cell_size, 500)
+
+    # Calculate shape function and gradient values
+    shape_values = [shape_function(np.array([x, 0.0]), node_pos, cell_size)[0] for x in particle_positions]
+    gradient_values = [gradient_shape_function(np.array([x, 0.0]), node_pos, cell_size)[0] for x in particle_positions]
+
+    # Plotting
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(1, 2, 1)
+    plt.plot(particle_positions, shape_values, label='Shape Function')
+    plt.title('Shape Function')
+    plt.xlabel('Particle Position')
+    plt.ylabel('Shape Function Value')
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(particle_positions, gradient_values, label='Gradient of Shape Function', color='r')
+    plt.title('Gradient of Shape Function')
+    plt.xlabel('Particle Position')
+    plt.ylabel('Gradient Value')
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
 

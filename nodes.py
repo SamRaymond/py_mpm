@@ -52,6 +52,7 @@ class Node:
 
     def reset(self):
         self.mass = 0.0
+        self.momentum.fill(0)
         self.velocity.fill(0)
         self.force.fill(0)
         # Reset other properties as needed

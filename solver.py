@@ -90,26 +90,14 @@ class MPMSolver:
                     node.force[0] += force_x
                     node.force[1] += force_y
 
-                if node.mass > 0:
-                    node.velocity = node.momentum / node.mass
-                else:
-                    node.velocity = np.zeros(2)
-
     def update_grid(self):
-        dt = self.dt  # Time step
+        dt = self.dt / 2 if self.time <= self.dt else self.dt
+        gravity = np.array([0, 0])  # Gravity is off for now
         for node in self.grid.nodes.flat:
             if node.mass > 1e-9:
-                # Update momentum using explicit integration
+                node.force += node.mass * gravity
                 node.momentum += node.force * dt
-
-                # Update velocity based on new momentum
                 node.velocity = node.momentum / node.mass
-
-        # Apply external forces (e.g., gravity) if needed
-        gravity = np.array([0, 0]) 
-        for node in self.grid.nodes.flat:
-            if node.mass > 0:
-                node.velocity += gravity * dt
 
         # Clear forces for the next step
         # for node in self.grid.nodes.flat:
@@ -121,7 +109,7 @@ class MPMSolver:
             strain_rate = np.zeros((2, 2))
             acceleration_update = np.zeros(2)
             nearby_nodes = self.grid.get_nearby_nodes(particle['position'])
-
+            density_rate = 0
             for node in nearby_nodes:
                 if node.mass > 1e-9:
                     shape_x, shape_y = shape_function(particle['position'], node.position, self.grid.cell_size)
@@ -130,36 +118,41 @@ class MPMSolver:
                     shape_value = shape_x * shape_y
                     particle_velocity_update += shape_value * node.velocity
                     acceleration_update += shape_value * node.force / node.mass
+                    density_rate -= particle['density']*((grad_shape_x*shape_y*node.velocity[0])+(grad_shape_y*shape_x*node.velocity[1]))
                     # Calculate strain rate components
                     strain_rate[0, 0] += grad_shape_x * shape_y * node.velocity[0]  # exx
-                    strain_rate[0, 1] += 0.5 * (grad_shape_x * shape_y * node.velocity[1] + 
-                                                grad_shape_y * shape_x * node.velocity[0])  # exy
+                    strain_rate[0, 1] += 0.5 * (grad_shape_x * shape_y * node.velocity[1] + grad_shape_y * shape_x * node.velocity[0])  # exy
                     strain_rate[1, 0] = strain_rate[0, 1]  # eyx = exy
                     strain_rate[1, 1] += grad_shape_y * shape_x * node.velocity[1]  # eyy
 
             # Update particle velocity
-            particle['velocity'] = particle_velocity_update
+            particle['Gvelocity'] = particle_velocity_update
+            # Update acceleration
             particle['acceleration'] = acceleration_update
-
             # Store strain rate in particle
             particle['strain_rate'] = strain_rate
-
+            # Store density rate in particle
+            particle['density_rate'] = density_rate
     def update_particles(self):
+
         for particle in self.particles.particles:
-            # particle['velocity']+= particle['acceleration']*self.dt
-            # Update position using current velocity
+            # Update velocity using both grid-interpolated velocity and acceleration
+            particle['velocity'] += particle['acceleration'] * self.dt
+            # Update position
             particle['position'] += particle['velocity'] * self.dt
 
+            # particle['density'] += particle['density_rate'] * self.dt
+            # particle['volume'] = particle['mass'] / particle['density']
             # Update deformation gradient (F)
-            identity = np.eye(2)
-            particle['F'] = np.dot(identity + self.dt * particle['strain_rate'], particle.get('F', identity))
+            # identity = np.eye(2)
+            # particle['F'] = np.dot(identity + self.dt * particle['strain_rate'], particle.get('F', identity))
 
-            # Update volume
-            J = np.linalg.det(particle['F'])
-            particle['volume'] = particle['initial_volume'] * J
+            # # Update volume
+            # J = np.linalg.det(particle['F'])
+            # particle['volume'] = particle['initial_volume'] * J
 
             # Update density
-            particle['density'] = particle['initial_density'] / J
+            # particle['density'] = particle['initial_density'] / J
 
             # Update stress using the material model
             material = particle['material']

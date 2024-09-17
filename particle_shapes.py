@@ -15,9 +15,9 @@ class ParticleShape:
             for j in range(y_range[0], y_range[1]):
                 for px in range(2):
                     for py in range(2):
-                        # Place particles at 1/4 and 3/4 of the cell in each dimension
-                        x = (i + (px + 1) / 3) * self.cell_size
-                        y = (j + (py + 1) / 3) * self.cell_size
+                        # Place particles at the center of each quadrant (1/4 and 3/4 of the cell)
+                        x = (i + (px + 0.5) / 2) * self.cell_size
+                        y = (j + (py + 0.5) / 2) * self.cell_size
                         
                         if self._is_inside(x, y):
                             particle = {
@@ -70,8 +70,9 @@ class Disk(ParticleShape):
             for j in range(int(y_min / self.cell_size), int(y_max / self.cell_size) + 1):
                 for px in range(2):
                     for py in range(2):
-                        x = (i + (px + 1) / 3) * self.cell_size
-                        y = (j + (py + 1) / 3) * self.cell_size
+                        # Place particles at the center of each quadrant (1/4 and 3/4 of the cell)
+                        x = (i + (px + 0.5) / 2) * self.cell_size
+                        y = (j + (py + 0.5) / 2) * self.cell_size
                         if self._is_inside(x, y):
                             particle = {
                                 'position': np.array([x, y]),

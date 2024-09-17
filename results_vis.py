@@ -4,12 +4,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.colors import Normalize
+import argparse
 
-# Directory containing the CSV files
-data_dir = "simulation_output"
+# Add command-line argument parsing
+parser = argparse.ArgumentParser(description="Visualize simulation results.")
+parser.add_argument("data_dir", help="Directory containing the CSV files")
+args = parser.parse_args()
 
-# Get all CSV files in the directory
-csv_files = sorted([f for f in os.listdir(data_dir) if f.endswith('.csv')])
+# Use the provided data directory
+data_dir = args.data_dir
 
 # Variables to store grid boundaries
 grid_min_x = float('inf')
@@ -42,6 +45,7 @@ def read_csv(filename):
     return positions, velocities, stress, volumes, masses
 
 # Read the first file to get the number of particles and initialize the plot
+csv_files = sorted([f for f in os.listdir(data_dir) if f.endswith('.csv')])
 initial_positions, initial_velocities, initial_stress, initial_volumes, initial_masses = read_csv(csv_files[0])
 num_particles = len(initial_positions)
 
@@ -52,8 +56,8 @@ ax1 = fig.add_subplot(gs[0, 0])
 ax2 = fig.add_subplot(gs[0, 1])
 ax3 = fig.add_subplot(gs[1, :])
 
-scatter1 = ax1.scatter([], [], s=10, c=[], cmap='viridis')
-scatter2 = ax2.scatter([], [], s=10, c=[], cmap='plasma')
+scatter1 = ax1.scatter([], [], s=50, c=[], cmap='viridis', marker='s')
+scatter2 = ax2.scatter([], [], s=50, c=[], cmap='plasma', marker='s')
 line1, = ax3.plot([], [], label='Kinetic Energy')
 line2, = ax3.plot([], [], label='Elastic Energy')
 line3, = ax3.plot([], [], label='Total Energy')
@@ -129,13 +133,13 @@ def update(frame):
     stress_max = max(stress_max, von_mises.max())
     
     # Update color normalizations
-    # norm1.autoscale(vel_mag)
+    norm1.autoscale(vel_mag)
     # norm1.autoscale(velocities[:, 0])
-    norm1.vmin = -2.0#vel_mag.min()
-    norm1.vmax = 2.0
-    # norm2.autoscale(von_mises)
-    norm2.vmin = 0.0#stress_min
-    norm2.vmax = 1.0e5#stress_max
+    # norm1.vmin = -2.0#vel_mag.min()
+    # norm1.vmax = 2.0
+    norm2.autoscale(von_mises)
+    # norm2.vmin = 0.0#stress_min
+    # norm2.vmax = 1.0e5#stress_max
     
     # scatter1.set_array(vel_mag)
     scatter1.set_array(velocities[:, 0])
