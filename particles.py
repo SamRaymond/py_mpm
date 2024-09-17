@@ -27,6 +27,8 @@ class Particles:
                 particle = {
                     'position': position,
                     'velocity': velocity,
+                    'acceleration': np.zeros(2),
+                    'strain_rate': np.zeros((2, 2)),
                     'density': material_props['density'],
                     'mass': data['mass'],
                     'volume': data['volume'],

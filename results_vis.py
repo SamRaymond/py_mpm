@@ -46,7 +46,7 @@ initial_positions, initial_velocities, initial_stress, initial_volumes, initial_
 num_particles = len(initial_positions)
 
 # Create the figure and axes
-fig = plt.figure(figsize=(20, 15))
+fig = plt.figure(figsize=(10, 8))
 gs = fig.add_gridspec(2, 2)
 ax1 = fig.add_subplot(gs[0, 0])
 ax2 = fig.add_subplot(gs[0, 1])
@@ -129,11 +129,16 @@ def update(frame):
     stress_max = max(stress_max, von_mises.max())
     
     # Update color normalizations
-    norm1.autoscale(vel_mag)
-    norm2.vmin = stress_min
-    norm2.vmax = stress_max
+    # norm1.autoscale(vel_mag)
+    # norm1.autoscale(velocities[:, 0])
+    norm1.vmin = -2.0#vel_mag.min()
+    norm1.vmax = 2.0
+    # norm2.autoscale(von_mises)
+    norm2.vmin = 0.0#stress_min
+    norm2.vmax = 1.0e5#stress_max
     
-    scatter1.set_array(vel_mag)
+    # scatter1.set_array(vel_mag)
+    scatter1.set_array(velocities[:, 0])
     scatter2.set_array(von_mises)
     
     # Update colorbars
@@ -145,7 +150,7 @@ def update(frame):
     # Calculate and store energies
     youngs_modulus = float(csv_files[frame].split('_')[-1].split('.')[0])  # Extract Young's modulus from filename
     ke = calculate_kinetic_energy(velocities, masses)
-    ee = calculate_elastic_energy(stress, volumes, youngs_modulus)
+    ee = 1e-8*calculate_elastic_energy(stress, volumes, youngs_modulus)
     te = ke + ee
     kinetic_energy.append(ke)
     elastic_energy.append(ee)
@@ -169,7 +174,7 @@ def update(frame):
     return scatter1, scatter2, line1, line2, line3, title
 
 # Create the animation
-anim = FuncAnimation(fig, update, frames=len(csv_files), interval=500, blit=False)
+anim = FuncAnimation(fig, update, frames=len(csv_files), interval=50, blit=False)
 
 # Save the animation (optional)
 # anim.save('simulation.mp4', writer='ffmpeg', fps=30)

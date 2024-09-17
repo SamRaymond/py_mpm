@@ -12,12 +12,29 @@ def shape_function(particle_pos, node_pos, cell_size):
     Returns:
     tuple: Shape function values (sx, sy)
     """
-    dx = (particle_pos[0] - node_pos[0]) / cell_size
-    dy = (particle_pos[1] - node_pos[1]) / cell_size
-    
-    sx = 1 - abs(dx) if abs(dx) < 1 else 0
-    sy = 1 - abs(dy) if abs(dy) < 1 else 0
-    
+    L = cell_size
+    lp = cell_size / 4
+
+    def piecewise_shape(xp, xv):
+        x_diff = xp - xv
+        if x_diff <= -L - lp:
+            return 0
+        elif -L - lp < x_diff <= -L + lp:
+            return ((L + lp + x_diff) ** 2) / (4 * L * lp)
+        elif -L + lp < x_diff <= -lp:
+            return 1 + (x_diff / L)
+        elif -lp < x_diff <= lp:
+            return 1 - ((x_diff ** 2 + lp ** 2) / (2 * L * lp))
+        elif lp < x_diff <= L - lp:
+            return 1 - (x_diff / L)
+        elif L - lp < x_diff <= L + lp:
+            return ((L + lp - x_diff) ** 2) / (4 * L * lp)
+        else:
+            return 0
+
+    sx = piecewise_shape(particle_pos[0], node_pos[0])
+    sy = piecewise_shape(particle_pos[1], node_pos[1])
+
     return sx, sy
 
 def gradient_shape_function(particle_pos, node_pos, cell_size):
@@ -32,11 +49,28 @@ def gradient_shape_function(particle_pos, node_pos, cell_size):
     Returns:
     tuple: Gradient of the shape function (dsx_dx, dsy_dy)
     """
-    dx = (particle_pos[0] - node_pos[0]) / cell_size
-    dy = (particle_pos[1] - node_pos[1]) / cell_size
-    
-    dsx_dx = -1 if -1 < dx < 0 else (1 if 0 <= dx < 1 else 0)
-    dsy_dy = -1 if -1 < dy < 0 else (1 if 0 <= dy < 1 else 0)
-    
-    return dsx_dx / cell_size, dsy_dy / cell_size
+    L = cell_size
+    lp = cell_size / 4
+
+    def piecewise_gradient(xp, xv):
+        x_diff = xp - xv
+        if x_diff <= -L - lp:
+            return 0
+        elif -L - lp < x_diff <= -L + lp:
+            return (L + lp + x_diff) / (2 * L * lp)
+        elif -L + lp < x_diff <= -lp:
+            return 1 / L
+        elif -lp < x_diff <= lp:
+            return -x_diff / (L * lp)
+        elif lp < x_diff <= L - lp:
+            return -1 / L
+        elif L - lp < x_diff <= L + lp:
+            return -(L + lp - x_diff) / (2 * L * lp)
+        else:
+            return 0
+
+    dsx_dx = piecewise_gradient(particle_pos[0], node_pos[0])
+    dsy_dy = piecewise_gradient(particle_pos[1], node_pos[1])
+
+    return dsx_dx, dsy_dy
 

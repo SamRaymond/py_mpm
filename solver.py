@@ -112,14 +112,14 @@ class MPMSolver:
                 node.velocity += gravity * dt
 
         # Clear forces for the next step
-        for node in self.grid.nodes.flat:
-            node.force = np.zeros(2)
+        # for node in self.grid.nodes.flat:
+        #     node.force = np.zeros(2)
 
     def grid_to_particle(self):
       for p_idx, particle in enumerate(self.particles.particles):
             particle_velocity_update = np.zeros(2)
             strain_rate = np.zeros((2, 2))
-
+            acceleration_update = np.zeros(2)
             nearby_nodes = self.grid.get_nearby_nodes(particle['position'])
 
             for node in nearby_nodes:
@@ -129,7 +129,7 @@ class MPMSolver:
 
                     shape_value = shape_x * shape_y
                     particle_velocity_update += shape_value * node.velocity
-
+                    acceleration_update += shape_value * node.force / node.mass
                     # Calculate strain rate components
                     strain_rate[0, 0] += grad_shape_x * shape_y * node.velocity[0]  # exx
                     strain_rate[0, 1] += 0.5 * (grad_shape_x * shape_y * node.velocity[1] + 
@@ -139,12 +139,14 @@ class MPMSolver:
 
             # Update particle velocity
             particle['velocity'] = particle_velocity_update
+            particle['acceleration'] = acceleration_update
 
             # Store strain rate in particle
             particle['strain_rate'] = strain_rate
 
     def update_particles(self):
         for particle in self.particles.particles:
+            # particle['velocity']+= particle['acceleration']*self.dt
             # Update position using current velocity
             particle['position'] += particle['velocity'] * self.dt
 
