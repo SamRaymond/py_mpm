@@ -154,7 +154,7 @@ def update(frame):
     # Calculate and store energies
     youngs_modulus = float(csv_files[frame].split('_')[-1].split('.')[0])  # Extract Young's modulus from filename
     ke = calculate_kinetic_energy(velocities, masses)
-    ee = calculate_elastic_energy(stress, volumes, youngs_modulus)
+    ee = 1e-4*calculate_elastic_energy(stress, volumes, youngs_modulus)
     te = ke + ee
     kinetic_energy.append(ke)
     elastic_energy.append(ee)

@@ -1,107 +1,103 @@
+import taichi as ti
 import numpy as np
-import matplotlib.pyplot as plt
 
+ti.init(arch=ti.gpu, default_fp=ti.f32)
+
+# Constants
+cell_size = 1.0
+L = cell_size
+lp = cell_size / 4.0
+node_pos = ti.Vector([0.0, 0.0])
+num_particles = 500
+
+# Taichi fields
+particle_positions = ti.field(dtype=ti.f32, shape=num_particles)
+shape_values = ti.field(dtype=ti.f32, shape=num_particles)
+gradient_values = ti.field(dtype=ti.f32, shape=num_particles)
+
+# Initialize particle positions with dtype=np.float32
+particle_positions_np = np.linspace(-1.5 * cell_size, 1.5 * cell_size, num_particles, dtype=np.float32)
+particle_positions.from_numpy(particle_positions_np)
+
+@ti.func
+def piecewise_shape(x_diff, cell_size):
+    L = cell_size
+    lp = cell_size / 4.0
+    result = 0.0  # Initialize result
+    if x_diff <= -L - lp:
+        result = 0.0
+    elif x_diff <= -L + lp:
+        result = ((L + lp + x_diff) ** 2) / (4 * L * lp)
+    elif x_diff <= -lp:
+        result = 1.0 + (x_diff / L)
+    elif x_diff <= lp:
+        result = 1.0 - ((x_diff ** 2 + lp ** 2) / (2 * L * lp))
+    elif x_diff <= L - lp:
+        result = 1.0 - (x_diff / L)
+    elif x_diff <= L + lp:
+        result = ((L + lp - x_diff) ** 2) / (4 * L * lp)
+    else:
+        result = 0.0
+    return result
+
+@ti.func
+def piecewise_gradient(x_diff, cell_size):
+    L = cell_size
+    lp = cell_size / 4.0
+    result = 0.0  # Initialize result
+    if x_diff <= -L - lp:
+        result = 0.0
+    elif x_diff <= -L + lp:
+        result = (L + lp + x_diff) / (2 * L * lp)
+    elif x_diff <= -lp:
+        result = 1.0 / L
+    elif x_diff <= lp:
+        result = -x_diff / (L * lp)
+    elif x_diff <= L - lp:
+        result = -1.0 / L
+    elif x_diff <= L + lp:
+        result = -(L + lp - x_diff) / (2 * L * lp)
+    else:
+        result = 0.0
+    return result
+
+@ti.func
 def shape_function(particle_pos, node_pos, cell_size):
-    """
-    Calculate the linear nodal shape function value (tent function).
-    
-    Args:
-    particle_pos (np.array): Position of the particle (2D)
-    node_pos (np.array): Position of the grid node (2D)
-    cell_size (float): Size of a grid cell
-    
-    Returns:
-    tuple: Shape function values (sx, sy)
-    """
-    L = cell_size
-    lp = cell_size / 4
+    x_diff = particle_pos[0] - node_pos[0]
+    y_diff = particle_pos[1] - node_pos[1]
+    shape_x = piecewise_shape(x_diff, cell_size)
+    shape_y = piecewise_shape(y_diff, cell_size)
+    return shape_x, shape_y
 
-    def piecewise_shape(xp, xv):
-        x_diff = xp - xv
-        if x_diff <= -L - lp:
-            return 0
-        elif -L - lp < x_diff <= -L + lp:
-            return ((L + lp + x_diff) ** 2) / (4 * L * lp)
-        elif -L + lp < x_diff <= -lp:
-            return 1 + (x_diff / L)
-        elif -lp < x_diff <= lp:
-            return 1 - ((x_diff ** 2 + lp ** 2) / (2 * L * lp))
-        elif lp < x_diff <= L - lp:
-            return 1 - (x_diff / L)
-        elif L - lp < x_diff <= L + lp:
-            return ((L + lp - x_diff) ** 2) / (4 * L * lp)
-        else:
-            return 0
-
-    sx = piecewise_shape(particle_pos[0], node_pos[0])
-    sy = piecewise_shape(particle_pos[1], node_pos[1])
-
-    return sx, sy
-
+@ti.func
 def gradient_shape_function(particle_pos, node_pos, cell_size):
-    """
-    Calculate the gradient of the linear nodal shape function.
-    
-    Args:
-    particle_pos (np.array): Position of the particle (2D)
-    node_pos (np.array): Position of the grid node (2D)
-    cell_size (float): Size of a grid cell
-    
-    Returns:
-    tuple: Gradient of the shape function (dsx_dx, dsy_dy)
-    """
-    L = cell_size
-    lp = cell_size / 4
+    x_diff = particle_pos[0] - node_pos[0]
+    y_diff = particle_pos[1] - node_pos[1]
+    grad_shape_x = piecewise_gradient(x_diff, cell_size)
+    grad_shape_y = piecewise_gradient(y_diff, cell_size)
+    return grad_shape_x, grad_shape_y
 
-    def piecewise_gradient(xp, xv):
-        x_diff = xp - xv
-        if x_diff <= -L - lp:
-            return 0
-        elif -L - lp < x_diff <= -L + lp:
-            return (L + lp + x_diff) / (2 * L * lp)
-        elif -L + lp < x_diff <= -lp:
-            return 1 / L
-        elif -lp < x_diff <= lp:
-            return -x_diff / (L * lp)
-        elif lp < x_diff <= L - lp:
-            return -1 / L
-        elif L - lp < x_diff <= L + lp:
-            return -(L + lp - x_diff) / (2 * L * lp)
-        else:
-            return 0
+# If you're not using the following code for plotting or testing, you can comment it out
+# @ti.kernel
+# def compute_shape_and_gradient():
+#     for i in particle_positions:
+#         xp = particle_positions[i]
+#         x_diff = xp - node_pos[0]
+#         y_diff = 0.0 - node_pos[1]  # Particle y-position is constant at 0.0
 
-    dsx_dx = piecewise_gradient(particle_pos[0], node_pos[0])
-    dsy_dy = piecewise_gradient(particle_pos[1], node_pos[1])
+#         # Compute shape function values
+#         sx = piecewise_shape(x_diff, cell_size)
+#         sy = piecewise_shape(y_diff, cell_size)
+#         shape_values[i] = sx  # Store sx (since sy is constant)
 
-    return dsx_dx, dsy_dy
-# wrap in main
-if __name__ == "__main__":  
-    # Parameters
-    cell_size = 1.0
-    node_pos = np.array([0.0, 0.0])
-    particle_positions = np.linspace(-1.5 * cell_size, 1.5 * cell_size, 500)
+#         # Compute gradient values
+#         dsx_dx = piecewise_gradient(x_diff, cell_size)
+#         gradient_values[i] = dsx_dx  # Store dsx_dx
 
-    # Calculate shape function and gradient values
-    shape_values = [shape_function(np.array([x, 0.0]), node_pos, cell_size)[0] for x in particle_positions]
-    gradient_values = [gradient_shape_function(np.array([x, 0.0]), node_pos, cell_size)[0] for x in particle_positions]
-
-    # Plotting
-    plt.figure(figsize=(12, 6))
-
-    plt.subplot(1, 2, 1)
-    plt.plot(particle_positions, shape_values, label='Shape Function')
-    plt.title('Shape Function')
-    plt.xlabel('Particle Position')
-    plt.ylabel('Shape Function Value')
-    plt.legend()
-
-    plt.subplot(1, 2, 2)
-    plt.plot(particle_positions, gradient_values, label='Gradient of Shape Function', color='r')
-    plt.title('Gradient of Shape Function')
-    plt.xlabel('Particle Position')
-    plt.ylabel('Gradient Value')
-    plt.legend()
-
-    plt.tight_layout()
-    plt.show()
+# # Main execution
+# if __name__ == "__main__":
+#     compute_shape_and_gradient()
+#     shape_values_np = shape_values.to_numpy()
+#     gradient_values_np = gradient_values.to_numpy()
+#     # Plotting code...
 

@@ -20,7 +20,8 @@ def save_particles_to_csv(particles, output_file):
             vel = particle['velocity']
             stress = particle['stress']
             strain = particle['strain']
-            material = particle['material']
+            youngs_modulus = particle['youngs_modulus']
+            poisson_ratio = particle['poisson_ratio']
             
             csv_writer.writerow([
                 p_idx,
@@ -32,7 +33,7 @@ def save_particles_to_csv(particles, output_file):
                 particle['volume'],
                 particle['mass'],
                 particle['density'],
-                material.youngs_modulus,
-                material.poisson_ratio
+                youngs_modulus,
+                poisson_ratio
             ])
 
