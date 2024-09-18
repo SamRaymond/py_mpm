@@ -328,6 +328,7 @@ class MPMSolver:
             # Update position
             self.particles.position[p_idx] += self.particles.Gvelocity[p_idx] * self.dt
             self.particles.density[p_idx] += self.particles.density_rate[p_idx] * self.dt
+            self.particles.volume[p_idx] = self.particles.mass[p_idx] / self.particles.density[p_idx]
 
             # Update stress using the material model
             material = self.particles.materials[p_idx]

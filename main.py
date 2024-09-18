@@ -48,14 +48,14 @@ material_properties = {
 }
 
 # Define disk parameters
-disk1_radius = 2*cell_size
+disk1_radius = 6*cell_size
 disk1_center = (0.25, 0.25)
 disk1_object_id = 1
 
-disk2_radius = 2*cell_size
+disk2_radius = 6*cell_size
 # Calculate the center of the second disk
 # It should be 2 cells from the edge of the first disk
-disk2_x = disk1_center[0] + disk1_radius + 4*cell_size + disk2_radius
+disk2_x = disk1_center[0] + disk1_radius + 3*cell_size + disk2_radius
 disk2_center = (disk2_x, disk1_center[1])
 disk2_object_id = 2
 
@@ -96,14 +96,14 @@ print(f"Total particles: {particles.get_particle_count()}")
 #     else:
 #         print("Invalid input. Please press Enter to continue or '0' to exit.")
 
-dt = particles.compute_dt(cfl_factor=0.1)
+dt = particles.compute_dt(cfl_factor=0.2)
 
 print(f"dt: {dt}")
 # Create MPM solver
 
 solver = MPMSolver(particles, grid, dt)
 
-num_steps = 5000
+num_steps = 10000
 
 # Create an output directory if it doesn't exist
 output_dir = "simulation_output"
