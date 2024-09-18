@@ -56,8 +56,8 @@ ax1 = fig.add_subplot(gs[0, 0])
 ax2 = fig.add_subplot(gs[0, 1])
 ax3 = fig.add_subplot(gs[1, :])
 
-scatter1 = ax1.scatter([], [], s=50, c=[], cmap='viridis', marker='s')
-scatter2 = ax2.scatter([], [], s=50, c=[], cmap='plasma', marker='s')
+scatter1 = ax1.scatter([], [], s=60, c=[], cmap='viridis', marker='s')
+scatter2 = ax2.scatter([], [], s=60, c=[], cmap='plasma', marker='s')
 line1, = ax3.plot([], [], label='Kinetic Energy')
 line2, = ax3.plot([], [], label='Elastic Energy')
 line3, = ax3.plot([], [], label='Total Energy')
@@ -133,10 +133,10 @@ def update(frame):
     stress_max = max(stress_max, von_mises.max())
     
     # Update color normalizations
-    norm1.autoscale(vel_mag)
+    # norm1.autoscale(vel_mag)
     # norm1.autoscale(velocities[:, 0])
-    # norm1.vmin = -2.0#vel_mag.min()
-    # norm1.vmax = 2.0
+    norm1.vmin = -1.0#vel_mag.min()
+    norm1.vmax = 1.0
     norm2.autoscale(von_mises)
     # norm2.vmin = 0.0#stress_min
     # norm2.vmax = 1.0e5#stress_max
@@ -154,7 +154,7 @@ def update(frame):
     # Calculate and store energies
     youngs_modulus = float(csv_files[frame].split('_')[-1].split('.')[0])  # Extract Young's modulus from filename
     ke = calculate_kinetic_energy(velocities, masses)
-    ee = 1e-8*calculate_elastic_energy(stress, volumes, youngs_modulus)
+    ee = 1e-4*calculate_elastic_energy(stress, volumes, youngs_modulus)
     te = ke + ee
     kinetic_energy.append(ke)
     elastic_energy.append(ee)
