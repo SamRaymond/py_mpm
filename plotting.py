@@ -6,8 +6,8 @@ def visualize_particles_and_grid(particles, grid, step):
     fig, ax = plt.subplots(figsize=(5, 5))
     
     # Extract positions and velocities
-    positions = np.array([p['position'] for p in particles.get_particles()])
-    velocities = np.array([p['velocity'] for p in particles.get_particles()])
+    positions = particles.position
+    velocities = particles.velocity
     
     # Ensure velocities is 2D
     if velocities.ndim == 1:
@@ -52,45 +52,26 @@ def visualize_particles_and_grid(particles, grid, step):
     plt.show()
 
 def visualize_particles_with_object_id(particles, grid):
-    fig, ax = plt.subplots(figsize=(5, 5))
-    # Extract positions and object IDs
-    positions = np.array([p['position'] for p in particles.get_particles()])
-    object_ids = np.array([p['object_id'] for p in particles.get_particles()])
+    fig, ax = plt.subplots()
+    unique_ids = np.unique(particles.object_ids)
+    color_map = plt.cm.get_cmap('tab20', len(unique_ids))
     
-    print(f"Total particles: {len(positions)}")
-    print(f"Unique object IDs: {np.unique(object_ids)}")
-    # print(f"Position range: x({positions[:, 0].min()}, {positions[:, 0].max()}), y({positions[:, 1].min()}, {positions[:, 1].max()})")
+    for obj_id in unique_ids:
+        mask = particles.object_ids == obj_id
+        ax.scatter(particles.positions[mask, 0], particles.positions[mask, 1], 
+                   label=f'Object {obj_id}', color=color_map(obj_id))
     
-    # Create a color map for different object IDs
-    unique_ids = np.unique(object_ids)
-    colors = plt.cm.rainbow(np.linspace(0, 1, len(unique_ids)))
-    color_map = dict(zip(unique_ids, colors))
-    
-    # Draw particles as squares
-    square_size = grid.cell_size / 2
-    for pos, obj_id in zip(positions, object_ids):
-        color = color_map[obj_id]
-        square = patches.Rectangle((pos[0] - square_size/2, pos[1] - square_size/2), 
-                                   square_size, square_size, 
-                                   facecolor=color, edgecolor='none', alpha=0.8)
-        ax.add_patch(square)
-    
-    # Draw MPM grid
-    for i in range(grid.node_count[0] + 1):
-        ax.axvline(x=i * grid.cell_size, color='gray', linestyle=':', alpha=0.5)
-    for j in range(grid.node_count[1] + 1):
-        ax.axhline(y=j * grid.cell_size, color='gray', linestyle=':', alpha=0.5)
-    
-    # Set plot properties
-    ax.set_aspect('equal')
     ax.set_xlim(0, grid.physical_size[0])
     ax.set_ylim(0, grid.physical_size[1])
     ax.set_xlabel('X (m)')
     ax.set_ylabel('Y (m)')
     ax.set_title('Particles with Object ID')
     
+    # Add grid lines
+    ax.grid(True)
+    
     # Add legend
-    legend_elements = [patches.Patch(facecolor=color_map[id], edgecolor='none', label=f'Object {id}') 
+    legend_elements = [patches.Patch(facecolor=color_map(id), edgecolor='none', label=f'Object {id}') 
                        for id in unique_ids]
     ax.legend(handles=legend_elements, loc='upper right')
     

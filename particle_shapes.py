@@ -55,36 +55,40 @@ class Block(ParticleShape):
         return (0 <= x < self.width) and (0 <= y < self.height)
 
 class Disk(ParticleShape):
-    def __init__(self, cell_size, radius, center, object_id):
+    def __init__(self, cell_size, radius, center, object_id, material_density):
         super().__init__(cell_size, object_id)
         self.radius = radius
         self.center = np.array(center)
+        self.material_density = material_density  # Added material density
         print(f"Disk created with radius={radius}, center={center}")
 
     def generate_particles(self):
         particles = []
         x_min, x_max = self.center[0] - self.radius, self.center[0] + self.radius
         y_min, y_max = self.center[1] - self.radius, self.center[1] + self.radius
-        
+
+        # Determine the area per particle
+        area_per_particle = (self.cell_size ** 2) / self.particles_per_cell
+        mass_per_particle = self.material_density * area_per_particle
+
         for i in range(int(x_min / self.cell_size), int(x_max / self.cell_size) + 1):
             for j in range(int(y_min / self.cell_size), int(y_max / self.cell_size) + 1):
                 for px in range(2):
                     for py in range(2):
-                        # Place particles at the center of each quadrant (1/4 and 3/4 of the cell)
                         x = (i + (px + 0.5) / 2) * self.cell_size
                         y = (j + (py + 0.5) / 2) * self.cell_size
                         if self._is_inside(x, y):
                             particle = {
                                 'position': np.array([x, y]),
                                 'velocity': np.zeros(2),
-                                'mass': 1.0 ,
-                                'volume': 1.0,
+                                'mass': mass_per_particle,
+                                'volume': area_per_particle,
                                 'stress': np.zeros((2, 2)),
                                 'strain': np.zeros((2, 2)),
-                                'object_id': self.object_id,  # Add object_id to the particle
+                                'object_id': max(0, self.object_id),
                             }
                             particles.append(particle)
-        
+
         print(f"Disk generated {len(particles)} particles")
         if len(particles) == 0:
             print(f"Warning: No particles generated. Check disk parameters.")
