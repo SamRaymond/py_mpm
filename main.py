@@ -9,7 +9,7 @@ from solver import MPMSolver
 from results import save_particles_to_csv
 
 # Initialize Taichi
-ti.init(arch=ti.gpu)  # Use ti.gpu if you have a compatible GPU
+ti.init(arch=ti.cpu, default_fp=ti.f32)  # Use ti.gpu if you have a compatible GPU
 
 # Setup grid parameters
 grid_size = (0.5, 0.5)  # Adjust as needed
@@ -44,11 +44,11 @@ material_properties = {
 }
 
 # Define disk parameters
-disk1_radius = 6 * cell_size
-disk1_center = (0.25, 0.25)
+disk1_radius = 1 * cell_size
+disk1_center = (0.2, 0.2)
 disk1_object_id = object_ids[0]
 
-disk2_radius = 6 * cell_size
+disk2_radius = 0 * cell_size
 # Calculate the center of the second disk
 # It should be 3 cells from the edge of the first disk
 disk2_x = disk1_center[0] + disk1_radius + 3 * cell_size + disk2_radius
@@ -68,7 +68,7 @@ combined_particles = particles1 + particles2
 particles = Particles(combined_particles, material_properties, cell_size)
 
 # Set initial velocities for each object
-particles.set_object_velocity(object_id=object_ids[0], vx=1.0, vy=0.0)   # Object 1 moving right
+particles.set_object_velocity(object_id=object_ids[0], vx=-1.0, vy=0.0)   # Object 1 moving right
 particles.set_object_velocity(object_id=object_ids[1], vx=-1.0, vy=0.0)  # Object 2 moving left
 
 print(f"Generated {len(particles1)} particles for disk 1")
@@ -90,13 +90,13 @@ print(f"Total particles: {particles.get_particle_count()}")
 #     else:
 #         print("Invalid input. Please press Enter to continue or '0' to exit.")
 
-dt = particles.compute_dt(cfl_factor=0.001)
+dt = particles.compute_dt(cfl_factor=0.025)
 print(f"dt: {dt}")
 
 # Create MPM solver
 solver = MPMSolver(particles, grid, dt)
 
-num_steps = 1000000
+num_steps = 40000
 
 # Create an output directory if it doesn't exist
 output_dir = "simulation_output_taichi"
@@ -107,7 +107,7 @@ for step in tqdm(range(num_steps), desc="Simulating"):
     solver.step()
     
     # Save outputs every 100 steps
-    if step % 100000 == 0:
+    if step % 100 == 0:
         output_file = os.path.join(output_dir, f"step_{step:05d}.csv")
         save_particles_to_csv(particles, output_file)
         print(f"Saved output for step {step} to {output_file}")

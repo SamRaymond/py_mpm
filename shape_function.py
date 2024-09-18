@@ -1,7 +1,7 @@
 import taichi as ti
 import numpy as np
 
-ti.init(arch=ti.gpu, default_fp=ti.f32)
+ti.init(arch=ti.cpu, default_fp=ti.f32)
 
 # Constants
 cell_size = 1.0

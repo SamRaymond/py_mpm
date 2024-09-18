@@ -166,7 +166,7 @@ class MPMSolver:
 
                 else:
                     # Only one body at this node
-                    if self.grid.mass_body1[i, j] != 0.0:
+                    if self.grid.mass_body1[i, j] > 0.0:
                         self.grid.velocity_body1[i, j] = self.grid.momentum_body1[i, j] / self.grid.mass_body1[i, j]
                         self.grid.acceleration_body1[i, j] = self.grid.force_body1[i, j] / self.grid.mass_body1[i, j]
 
@@ -175,7 +175,7 @@ class MPMSolver:
                         else:
                             self.grid.velocity_body1[i, j] += self.grid.acceleration_body1[i, j] * dt
 
-                    elif self.grid.mass_body2[i, j] != 0.0:
+                    elif self.grid.mass_body2[i, j] > 0.0:
                         self.grid.velocity_body2[i, j] = self.grid.momentum_body2[i, j] / self.grid.mass_body2[i, j]
                         self.grid.acceleration_body2[i, j] = self.grid.force_body2[i, j] / self.grid.mass_body2[i, j]
 
@@ -197,8 +197,8 @@ class MPMSolver:
             i = int(particle_pos[0] / self.grid.cell_size)
             j = int(particle_pos[1] / self.grid.cell_size)
 
-            for di in ti.static(range(-2, 3)):
-                for dj in ti.static(range(-2, 3)):
+            for di in ti.static(range(-1, 2)):
+                for dj in ti.static(range(-1, 2)):
                     cell_i = i + di
                     cell_j = j + dj
 
@@ -237,8 +237,10 @@ class MPMSolver:
                             )
 
                             # Compute strain rate
-                            grad_shape = ti.Vector([grad_shape_x * shape_y, shape_x * grad_shape_y])
-                            strain_rate += velocity.outer_product(grad_shape)
+                            strain_rate[0, 0] += velocity[0] * grad_shape_x * shape_y
+                            strain_rate[0, 1] += velocity[0] * grad_shape_y * shape_x
+                            strain_rate[1, 0] += velocity[1] * grad_shape_x * shape_y
+                            strain_rate[1, 1] += velocity[1] * grad_shape_y * shape_x
 
             self.particles.velocity[p_idx] = velocity_update
             self.particles.acceleration[p_idx] = acceleration_update
@@ -249,8 +251,10 @@ class MPMSolver:
     def update_particles(self):
         for p_idx in range(self.particles.num_particles):
             # Update position
+            # self.particles.velocity[p_idx] += self.particles.acceleration[p_idx] * self.dt
             self.particles.position[p_idx] += self.particles.velocity[p_idx] * self.dt
             self.particles.density[p_idx] += self.particles.density_rate[p_idx] * self.dt
+            self.particles.volume[p_idx] = self.particles.mass[p_idx] / self.particles.density[p_idx]
             # Update stress using material model
             stress_rate = self.particles.compute_stress_rate(p_idx)
             self.particles.stress[p_idx] += stress_rate * self.dt
