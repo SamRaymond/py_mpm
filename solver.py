@@ -52,8 +52,8 @@ class MPMSolver:
                         # Contact/Multibody handling
                         if self.grid.body_id[cell_i * self.grid.node_count_y + cell_j] == -1:
                             self.grid.body_id[cell_i * self.grid.node_count_y + cell_j] = mp_obj_id
-                        elif self.grid.body_id[cell_i * self.grid.node_count_y + cell_j + 1] == -1 and self.grid.body_id[cell_i * self.grid.node_count_y + cell_j] != mp_obj_id:
-                            self.grid.body_id[cell_i * self.grid.node_count_y + cell_j + 1] = mp_obj_id
+                        elif self.grid.body_id[cell_i * self.grid.node_count_y + cell_j + self.grid.total_nodes] == -1 and self.grid.body_id[cell_i * self.grid.node_count_y + cell_j] != mp_obj_id:
+                            self.grid.body_id[cell_i * self.grid.node_count_y + cell_j + self.grid.total_nodes] = mp_obj_id
 
                         # Update node properties for center of mass
                         ti.atomic_add(self.grid.mass[cell_i, cell_j], mp_mass * shape_value)
@@ -83,7 +83,7 @@ class MPMSolver:
                             ti.atomic_add(self.grid.normals_body1[cell_i, cell_j], volume_weight)
 
                         # Update body2 properties
-                        elif self.grid.body_id[cell_i * self.grid.node_count_y + cell_j + 1] == mp_obj_id:
+                        elif self.grid.body_id[cell_i * self.grid.node_count_y + cell_j + self.grid.total_nodes] == mp_obj_id:
                             ti.atomic_add(self.grid.mass_body2[cell_i, cell_j], mp_mass * shape_value)
                             ti.atomic_add(self.grid.momentum_body2[cell_i, cell_j][0], mp_mass * self.particles.velocity[p_idx][0] * shape_value)
                             ti.atomic_add(self.grid.momentum_body2[cell_i, cell_j][1], mp_mass * self.particles.velocity[p_idx][1] * shape_value)
@@ -261,7 +261,7 @@ class MPMSolver:
                                 acceleration[1] = self.grid.acceleration_body1[cell_i, cell_j][1]
                                 normals[0] = self.grid.normals_body1[cell_i, cell_j][0]
                                 normals[1] = self.grid.normals_body1[cell_i, cell_j][1]
-                            elif self.grid.body_id[cell_i * self.grid.node_count_y + cell_j + 1] == mp_obj_id:
+                            elif self.grid.body_id[cell_i * self.grid.node_count_y + cell_j + self.grid.total_nodes] == mp_obj_id:
                                 velocity[0] = self.grid.velocity_body2[cell_i, cell_j][0]
                                 velocity[1] = self.grid.velocity_body2[cell_i, cell_j][1]
                                 acceleration[0] = self.grid.acceleration_body2[cell_i, cell_j][0]
