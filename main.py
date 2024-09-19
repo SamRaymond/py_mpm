@@ -44,11 +44,11 @@ material_properties = {
 }
 
 # Define disk parameters
-disk1_radius = 10 * cell_size
+disk1_radius = 5 * cell_size
 disk1_center = (0.2, 0.2)
 disk1_object_id = object_ids[0]
 
-disk2_radius = 10 * cell_size
+disk2_radius = 5 * cell_size
 # Calculate the center of the second disk
 # It should be 3 cells from the edge of the first disk
 disk2_x = disk1_center[0] + disk1_radius + 10 * cell_size + disk2_radius
