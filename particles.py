@@ -139,4 +139,3 @@ class Particles:
         self.acceleration.fill(0.0)
         self.strain_rate.fill(0.0)
         self.density_rate.fill(0.0)
-        # self.normals.fill(0.0)  # Uncomment if normals need to be reset

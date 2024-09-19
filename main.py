@@ -12,8 +12,8 @@ from results import save_particles_to_csv
 ti.init(arch=ti.cpu, default_fp=ti.f32)  # Use ti.gpu if you have a compatible GPU
 
 # Setup grid parameters
-grid_size = (0.5, 0.5)  # Adjust as needed
-cell_size = 0.01  # Adjust based on your simulation scale
+grid_size = (0.75, 0.75)  # Adjust as needed
+cell_size = 0.005  # Adjust based on your simulation scale
 
 # Initialize the grid
 grid = Grid(grid_size, cell_size)
@@ -24,7 +24,7 @@ physical_size = (grid_size[0] * cell_size, grid_size[1] * cell_size)
 print(f"Grid initialized with size {grid_size} and physical dimensions {physical_size}")
 print(f"Total number of nodes: {grid.total_nodes}")  # We now have 2500 nodes (50 * 50)
 
-object_ids = [1, 2]
+object_ids = [0,1]
 
 # Initialize Material Points
 # Define material properties
@@ -44,14 +44,14 @@ material_properties = {
 }
 
 # Define disk parameters
-disk1_radius = 1 * cell_size
+disk1_radius = 10 * cell_size
 disk1_center = (0.2, 0.2)
 disk1_object_id = object_ids[0]
 
-disk2_radius = 0 * cell_size
+disk2_radius = 10 * cell_size
 # Calculate the center of the second disk
 # It should be 3 cells from the edge of the first disk
-disk2_x = disk1_center[0] + disk1_radius + 3 * cell_size + disk2_radius
+disk2_x = disk1_center[0] + disk1_radius + 10 * cell_size + disk2_radius
 disk2_center = (disk2_x, disk1_center[1])
 disk2_object_id = object_ids[1]
 
@@ -68,8 +68,8 @@ combined_particles = particles1 + particles2
 particles = Particles(combined_particles, material_properties, cell_size)
 
 # Set initial velocities for each object
-particles.set_object_velocity(object_id=object_ids[0], vx=-1.0, vy=0.0)   # Object 1 moving right
-particles.set_object_velocity(object_id=object_ids[1], vx=-1.0, vy=0.0)  # Object 2 moving left
+particles.set_object_velocity(object_id=object_ids[0], vx=10.0, vy=0.0)   # Object 1 moving right
+particles.set_object_velocity(object_id=object_ids[1], vx=-10.0, vy=0.0)  # Object 2 moving left
 
 print(f"Generated {len(particles1)} particles for disk 1")
 print(f"Generated {len(particles2)} particles for disk 2")
@@ -80,6 +80,7 @@ print(f"Total particles: {particles.get_particle_count()}")
 
 # # Wait for keyboard input to continue or exit
 # while True:
+
 #     user_input = input("Press Enter to continue or '0' to exit: ")
 #     if user_input == '0':
 #         print("Exiting simulation...")
@@ -90,13 +91,13 @@ print(f"Total particles: {particles.get_particle_count()}")
 #     else:
 #         print("Invalid input. Please press Enter to continue or '0' to exit.")
 
-dt = particles.compute_dt(cfl_factor=0.025)
+dt = particles.compute_dt(cfl_factor=0.005)
 print(f"dt: {dt}")
 
 # Create MPM solver
 solver = MPMSolver(particles, grid, dt)
 
-num_steps = 40000
+num_steps = 50000
 
 # Create an output directory if it doesn't exist
 output_dir = "simulation_output_taichi"
@@ -107,7 +108,7 @@ for step in tqdm(range(num_steps), desc="Simulating"):
     solver.step()
     
     # Save outputs every 100 steps
-    if step % 100 == 0:
+    if step % 1000 == 0:
         output_file = os.path.join(output_dir, f"step_{step:05d}.csv")
         save_particles_to_csv(particles, output_file)
         print(f"Saved output for step {step} to {output_file}")

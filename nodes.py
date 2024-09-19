@@ -30,9 +30,9 @@ class Grid:
         self.normals_body1 = ti.Vector.field(2, dtype=ti.f32, shape=(self.node_count_x, self.node_count_y))
         self.normals_body2 = ti.Vector.field(2, dtype=ti.f32, shape=(self.node_count_x, self.node_count_y))
 
-        # Initialize body_id as a vector of two integers
-        self.body_id = ti.Vector.field(2, dtype=ti.i32, shape=(self.node_count_x, self.node_count_y))
-
+        # Initialize body_ids as a flat array representing a 2D grid
+        self.body_id = ti.field(dtype=ti.i32, shape=(self.total_nodes*2))
+        self.body_id.fill(-1)
         self.initialize_grid()
 
     @ti.kernel
@@ -62,8 +62,8 @@ class Grid:
             self.acceleration_body2[i, j] = ti.Vector([0.0, 0.0])
             self.normals_body1[i, j] = ti.Vector([0.0, 0.0])
             self.normals_body2[i, j] = ti.Vector([0.0, 0.0])
-            self.body_id[i, j] = ti.Vector([-1, -1])  # Reset to -1
-
+            self.body_id[i * self.node_count_y + j] = -1  # Reset to -1
+            self.body_id[i * self.node_count_y + j + self.total_nodes] = -1  # Reset to -1
     @ti.func
     def get_node(self, i, j):
         # Returns a tuple of node properties at (i, j)
@@ -83,16 +83,17 @@ class Grid:
         acceleration_body2 = self.acceleration_body2[i, j]
         normals_body1 = self.normals_body1[i, j]
         normals_body2 = self.normals_body2[i, j]
-        body_id = self.body_id[i, j]
+        node_index = i * self.node_count_y + j
+        body_ids = ti.Vector([self.body_id[node_index], self.body_id[node_index + self.total_nodes]])
         return (position, mass, mass_body1, mass_body2, velocity, velocity_body1, velocity_body2,
                 momentum, momentum_body1, momentum_body2, force, acceleration, acceleration_body1,
-                acceleration_body2, normals_body1, normals_body2, body_id)
+                acceleration_body2, normals_body1, normals_body2, body_ids)
 
     @ti.func
     def set_node(self, i, j, node):
         (position, mass, mass_body1, mass_body2, velocity, velocity_body1, velocity_body2,
          momentum, momentum_body1, momentum_body2, force, acceleration, acceleration_body1,
-         acceleration_body2, normals_body1, normals_body2, body_id) = node
+         acceleration_body2, normals_body1, normals_body2, body_ids) = node
 
         self.position[i, j] = position
         self.mass[i, j] = mass
@@ -110,7 +111,9 @@ class Grid:
         self.acceleration_body2[i, j] = acceleration_body2
         self.normals_body1[i, j] = normals_body1
         self.normals_body2[i, j] = normals_body2
-        self.body_id[i, j] = body_id
+        node_index = i * self.node_count_y + j
+        self.body_id[node_index] = body_ids[0]
+        self.body_id[node_index + self.total_nodes] = body_ids[1]
 
     @ti.func
     def get_nearby_nodes(self, particle_position):

@@ -162,3 +162,4 @@ cython_debug/
 #.idea/
 
 simulation_output/*.csv
+simulation_output_taichi/*.csv

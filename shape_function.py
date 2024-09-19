@@ -23,42 +23,73 @@ particle_positions.from_numpy(particle_positions_np)
 def piecewise_shape(x_diff, cell_size):
     L = cell_size
     lp = cell_size / 4.0
+    # x_diff = -x_diff 
     result = 0.0  # Initialize result
     if x_diff <= -L - lp:
-        result = 0.0
-    elif x_diff <= -L + lp:
+        result = 0
+    elif -L - lp < x_diff <= -L + lp:
         result = ((L + lp + x_diff) ** 2) / (4 * L * lp)
-    elif x_diff <= -lp:
-        result = 1.0 + (x_diff / L)
-    elif x_diff <= lp:
-        result = 1.0 - ((x_diff ** 2 + lp ** 2) / (2 * L * lp))
-    elif x_diff <= L - lp:
-        result = 1.0 - (x_diff / L)
-    elif x_diff <= L + lp:
+    elif -L + lp < x_diff <= -lp:
+        result = 1 + (x_diff / L)
+    elif -lp < x_diff <= lp:
+        result = 1 - ((x_diff ** 2 + lp ** 2) / (2 * L * lp))
+    elif lp < x_diff <= L - lp:
+        result = 1 - (x_diff / L)
+    elif L - lp < x_diff <= L + lp:
         result = ((L + lp - x_diff) ** 2) / (4 * L * lp)
     else:
-        result = 0.0
+        result = 0
+    # if x_diff <= -L - lp:
+    #     result = 0.0
+    # elif x_diff <= -L + lp:
+    #     result = ((L + lp + x_diff) ** 2) / (4 * L * lp)
+    # elif x_diff <= -lp:
+    #     result = 1.0 + (x_diff / L)
+    # elif x_diff <= lp:
+    #     result = 1.0 - ((x_diff ** 2 + lp ** 2) / (2 * L * lp))
+    # elif x_diff <= L - lp:
+    #     result = 1.0 - (x_diff / L)
+    # elif x_diff <= L + lp:
+    #     result = ((L + lp - x_diff) ** 2) / (4 * L * lp)
+    # else:
+    #     result = 0.0
     return result
 
 @ti.func
 def piecewise_gradient(x_diff, cell_size):
     L = cell_size
     lp = cell_size / 4.0
+    # x_diff = -x_diff 
     result = 0.0  # Initialize result
     if x_diff <= -L - lp:
-        result = 0.0
-    elif x_diff <= -L + lp:
-        result = (L + lp + x_diff) / (2 * L * lp)
-    elif x_diff <= -lp:
-        result = 1.0 / L
-    elif x_diff <= lp:
-        result = -x_diff / (L * lp)
-    elif x_diff <= L - lp:
-        result = -1.0 / L
-    elif x_diff <= L + lp:
-        result = -(L + lp - x_diff) / (2 * L * lp)
+        result =  0
+    elif -L - lp < x_diff <= -L + lp:
+        result =  (L + lp + x_diff) / (2 * L * lp)
+    elif -L + lp < x_diff <= -lp:
+        result =  1 / L
+    elif -lp < x_diff <= lp:
+        result =  -x_diff / (L * lp)
+    elif lp < x_diff <= L - lp:
+        result =  -1 / L
+    elif L - lp < x_diff <= L + lp:
+        result =  -(L + lp - x_diff) / (2 * L * lp)
     else:
-        result = 0.0
+        result =  0
+
+    # if x_diff <= -L - lp:
+    #     result = 0.0
+    # elif x_diff <= -L + lp:
+    #     result = (L + lp + x_diff) / (2 * L * lp)
+    # elif x_diff <= -lp:
+    #     result = 1.0 / L
+    # elif x_diff <= lp:
+    #     result = -x_diff / (L * lp)
+    # elif x_diff <= L - lp:
+    #     result = -1.0 / L
+    # elif x_diff <= L + lp:
+    #     result = -(L + lp - x_diff) / (2 * L * lp)
+    # else:
+    #     result = 0.0
     return result
 
 @ti.func

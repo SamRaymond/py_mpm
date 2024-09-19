@@ -56,8 +56,8 @@ ax1 = fig.add_subplot(gs[0, 0])
 ax2 = fig.add_subplot(gs[0, 1])
 ax3 = fig.add_subplot(gs[1, :])
 
-scatter1 = ax1.scatter([], [], s=60, c=[], cmap='viridis', marker='s')
-scatter2 = ax2.scatter([], [], s=60, c=[], cmap='plasma', marker='s')
+scatter1 = ax1.scatter([], [], s=2, c=[], cmap='viridis', marker='s')
+scatter2 = ax2.scatter([], [], s=2, c=[], cmap='plasma', marker='s')
 line1, = ax3.plot([], [], label='Kinetic Energy')
 line2, = ax3.plot([], [], label='Elastic Energy')
 line3, = ax3.plot([], [], label='Total Energy')
@@ -135,11 +135,11 @@ def update(frame):
     # Update color normalizations
     # norm1.autoscale(vel_mag)
     # norm1.autoscale(velocities[:, 0])
-    norm1.vmin = -1.0#vel_mag.min()
-    norm1.vmax = 1.0
-    norm2.autoscale(von_mises)
-    # norm2.vmin = 0.0#stress_min
-    # norm2.vmax = 1.0e5#stress_max
+    norm1.vmin = -3.0#vel_mag.min()
+    norm1.vmax = 3.0
+    # norm2.autoscale(von_mises)
+    norm2.vmin = 0.0#stress_min
+    norm2.vmax = 5.0e6#stress_max
     
     # scatter1.set_array(vel_mag)
     scatter1.set_array(velocities[:, 0])
